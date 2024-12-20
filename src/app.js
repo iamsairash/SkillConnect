@@ -86,6 +86,7 @@ app.listen(PORT, () => {
 });
 */
 
+/*
 const express = require("express");
 const { authAdmin, authUser } = require("../middlewares/auth.js");
 
@@ -102,6 +103,39 @@ app.use("/user/login", (req, res, next) => {
 });
 app.use("/user/getData", authUser, (req, res) => {
   res.send("got user data here!!");
+});
+
+app.listen(PORT, () => {
+  console.log(`server listening at port ${PORT}`);
+});
+
+*/
+
+const express = require("express");
+
+const app = express();
+const PORT = 7777;
+
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.send("some error is here");
+  }
+});
+
+app.get("/getUserData", (req, res) => {
+  //   try {
+  throw new Error("thrown error");
+  res.send("got the use data");
+  //   } catch (err) {
+  //     console.log(err);
+  //     res.send("error catched");
+  //   }
+});
+
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.send("some error is here");
+  }
 });
 
 app.listen(PORT, () => {
