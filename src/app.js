@@ -4,16 +4,12 @@ const User = require("./models/user.js");
 
 const app = express();
 
+app.use(express.json());
+
 app.post("/signup", async (req, res) => {
-  const userData = {
-    firstName: "Ram",
-    lastName: "chandra",
-    emailId: "ram@gmail.com",
-    password: "password",
-    gender: "male",
-    phone: "8978789",
-  };
-  const user = new User(userData);
+  // console.log(req.body); // the req.body refer to the data in the postman that we write in body in json format (or other format maybe)
+
+  const user = new User(req.body); // creating instance of User model
   try {
     await user.save();
     res.send("data saved successfully!!!");
