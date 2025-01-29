@@ -2,6 +2,8 @@ const express = require("express");
 const { connectDB } = require("./config/database.js");
 const User = require("./models/user.js");
 const validator = require("validator");
+const { validateSignupData } = require("./utils/validation.js");
+const bcrypt = require("bcrypt");
 
 const app = express();
 
@@ -95,21 +97,17 @@ app.delete("/deleteuser", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  // console.log(req.body); // the req.body refer to the data in the postman that we write in body in json format (or other format maybe)
-
-  const user = new User(req.body); // creating instance of User model
+  const { firstName, lastName, emailId, password, gender } = req.body;
   try {
-    if (user?.skills.length > 10) {
-      throw new Error("Skills can't be more than 10");
-    }
-
-    if (typeof user?.age != "number" || user?.age > 100 || user?.age < 12) {
-      throw new Error("Age should be between 12 and 100");
-    }
-
-    if (!validator.isEmail(user.emailId)) {
-      throw new Error("Email is not valid: ");
-    }
+    validateSignupData(req);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+      gender,
+    }); // creating instance of User model
     await user.save();
     res.send("data saved successfully!!!");
   } catch (err) {
