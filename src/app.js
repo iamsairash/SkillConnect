@@ -13,91 +13,15 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/user_id", async (req, res) => {
-  const userId = req.body._id;
+app.post("/sendconnection", authUser, async (req, res) => {
   try {
-    const user = await User.findById(userId);
-    res.status(200).send(user);
-  } catch (err) {
-    res.status(404).send("something went wrong ");
-  }
-});
+    const user = req.user;
 
-app.get("/oneuser", async (req, res) => {
-  const user = await User.findOne({ firstName: "Sairash" });
-  res.status(200).send(user);
-});
-
-app.get("/users", async (req, res) => {
-  const users = await User.find({ emailId: "pushpa@gmail.com" });
-  res.send(users);
-});
-
-app.patch("/user/:userid", async (req, res) => {
-  const userid = req.params?.userid;
-  const data = req.body;
-
-  try {
-    const UPDATE_ALLOWED = [
-      "firstName",
-      "lastName",
-      "password",
-      "age",
-      "gender",
-      "skills",
-      "about",
-      "photoURL",
-    ];
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-      UPDATE_ALLOWED.includes(k)
+    res.send(
+      user.firstName + " " + user.lastName + " send the connection request"
     );
-    if (!isUpdateAllowed) {
-      throw new Error("update not allowed");
-    }
-    if (data?.age !== undefined) {
-      if (typeof data?.age != "number" || data?.age < 12 || data?.age > 100) {
-        throw new Error("age should be between 12 and 100");
-      }
-    }
-    if (data.photoURL && !validator.isURL(data.photoURL)) {
-      throw new Error("URL is not valid: ");
-    }
-
-    await User.findByIdAndUpdate({ _id: userid }, data, {
-      runValidators: true,
-    });
-    res.send("data updated successfully");
   } catch (err) {
-    res.status(400).send("Something went wrong " + err.message);
-  }
-});
-
-app.patch("/usere", async (req, res) => {
-  const email = req.body.email;
-  try {
-    await User.findOneAndUpdate({ emailId: email }, { emailId: "bholenath" });
-    res.status(200).send("Data updated successfully !!!");
-  } catch (err) {
-    res.status(400).send("Something went wrong" + err.message);
-  }
-});
-
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find(); // finds all the documents from db
-    res.status(200).send(users);
-  } catch (err) {
-    res.status(400).send("Something went wrong" + err.message);
-  }
-});
-
-app.delete("/deleteuser", async (req, res) => {
-  const userid = req.body.id;
-  try {
-    await User.findByIdAndDelete(userid);
-    res.send("user delelted successfully");
-  } catch (err) {
-    res.send("something went wrong");
+    res.status(400).send("Error: " + err.message);
   }
 });
 
@@ -119,10 +43,10 @@ app.post("/login", async (req, res) => {
       throw new Error("invalid credentials"); // not registered user vandaa aru lai tha hunx ki yo email hamro db ma xaina (yo pani euta info ho jun leak hunu hudaina)
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await user.validatePassword(password);
 
     if (isValidPassword) {
-      const token = jwt.sign({ _id: user._id }, "TheSecret@123");
+      const token = await user.getJWT();
       res.cookie("token", token);
 
       res.send("loging successful!!");
