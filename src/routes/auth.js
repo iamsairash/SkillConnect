@@ -18,9 +18,9 @@ authRouter.post("/login", async (req, res) => {
 
     if (isValidPassword) {
       const token = await user.getJWT();
-      res.cookie("token", token, {maxAge: 680_400_000, httpOnly: true});
+      res.cookie("token", token, { maxAge: 680_400_000 });
 
-      res.send("loging successful!!");
+      res.json({ data: user });
     } else {
       throw new Error("invalid credentials");
     }
@@ -48,9 +48,9 @@ authRouter.post("/signup", async (req, res) => {
   }
 });
 
-authRouter.post("/logout", async(req,res)=>{
-  res.cookie("token", null, {maxAge: 0, httpOnly: true})
-  res.send("logout successful")
-})
+authRouter.post("/logout", async (req, res) => {
+  res.cookie("token", null, { maxAge: 0 });
+  res.send("logout successful");
+});
 
 module.exports = authRouter;
