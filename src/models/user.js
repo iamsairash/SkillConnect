@@ -10,13 +10,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
-      minLength: 4,
+      minLength: 2,
       maxLength: 20,
       trim: true,
     },
     lastName: {
       type: String,
-      minLength: 4,
+      minLength: 2,
       maxLength: 20,
       trim: true,
     },
@@ -43,8 +43,9 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
-    age: {
-      type: Number,
+    dob: {
+      type: Date,
+      required: true,
     },
     gender: {
       type: String,
@@ -90,6 +91,22 @@ userSchema.methods.validatePassword = async function (passwordByUser) {
   const passwordHash = this.password;
   const isValidPassword = await bcrypt.compare(passwordByUser, passwordHash);
   return isValidPassword;
+};
+
+userSchema.methods.getAge = function () {
+  const today = new Date();
+  const birthDate = new Date(this.dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
 };
 
 const User = mongoose.model("User", userSchema);

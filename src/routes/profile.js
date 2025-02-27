@@ -12,7 +12,8 @@ const profileRouter = express.Router();
 profileRouter.get("/profile/view", authUser, async (req, res) => {
   try {
     const user = req.user;
-    res.send(user);
+    const age = user.getAge();
+    res.send({ user, age });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
@@ -31,13 +32,15 @@ profileRouter.patch("/profile/edit", authUser, async (req, res) => {
       "skills",
       "gender",
     ];
-    const receivedFields = Object.keys(req.body); // return the array of keys
+    const receivedFields = Object.keys(req.body);
     const invalidFields = receivedFields.filter(
       (field) => !allowedUpdate.includes(field)
     );
 
     if (invalidFields.length > 0) {
-      res.status(400).send(`can't update Fields ${invalidFields.join(" ")}`);
+      return res
+        .status(400)
+        .send(`can't update Fields ${invalidFields.join(" ")}`);
     }
 
     receivedFields.forEach((k) => (loggedInUser[k] = req.body[k]));
@@ -51,6 +54,7 @@ profileRouter.patch("/profile/edit", authUser, async (req, res) => {
 profileRouter.patch("/profile/password", authUser, async (req, res) => {
   try {
     const user = req.user;
+
     validateNewPassword(req);
     const currentPassword = req.body.currentPassword;
     const isValidPassword = await bcrypt.compare(

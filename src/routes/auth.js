@@ -6,8 +6,8 @@ const bcrypt = require("bcrypt");
 const authRouter = express.Router();
 
 authRouter.post("/login", async (req, res) => {
-  const { emailId, password } = req.body;
   try {
+    const { emailId, password } = req.body;
     const user = await User.findOne({ emailId });
 
     if (!user) {
@@ -30,8 +30,9 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/signup", async (req, res) => {
-  const { firstName, lastName, emailId, password, gender } = req.body;
   try {
+    const { firstName, lastName, emailId, password, gender, dob } = req.body;
+
     validateSignupData(req);
     const passwordHash = await bcrypt.hash(password, 10);
     const user = new User({
@@ -40,6 +41,7 @@ authRouter.post("/signup", async (req, res) => {
       emailId,
       password: passwordHash,
       gender,
+      dob,
     }); // creating instance of User model
     await user.save();
     res.send("data saved successfully!!!");

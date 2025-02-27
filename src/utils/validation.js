@@ -1,18 +1,42 @@
 const validator = require("validator");
 
 const validateSignupData = (req) => {
-  const { firstName, lastName, emailId, password, gender, ...extrafields } =
-    req.body;
+  const {
+    firstName,
+    lastName,
+    emailId,
+    password,
+    gender,
+    dob,
+    ...extrafields
+  } = req.body;
 
-  if (!firstName) {
-    throw new Error("name can't be empty");
-  } else if (!emailId || !validator.isEmail(emailId)) {
+  if (!firstName || !firstName.trim()) {
+    throw new Error("first name can't be empty");
+  }
+  if (firstName.length > 30) {
+    throw new Error("length of first name is too large.");
+  }
+  if (!lastName || !lastName.trim()) {
+    throw new Error("last name can't be empty");
+  }
+  if (lastName.length > 30) {
+    throw new Error("length of last name is too large.");
+  }
+  if (!dob) {
+    throw new Error("DOB is required");
+  }
+  if (!emailId || !validator.isEmail(emailId)) {
     throw new Error(
       "This is invalid email. please enter a valid email address"
     );
-  } else if (!validator.isStrongPassword(password)) {
-    throw new Error("Please Enter a strong password. ");
-  } else if (Object.keys(extrafields).length > 0) {
+  }
+  if (!validator.isStrongPassword(password)) {
+    throw new Error(
+      "Please Enter a strong password. {minLength: 8, minNumber: 1, minSymbol:1"
+    );
+  }
+  if (Object.keys(extrafields).length > 0) {
     throw new Error("extra fields is not allowed");
   }
   const allowed_genders = ["male", "female", "others"];
@@ -22,8 +46,17 @@ const validateSignupData = (req) => {
 };
 
 const validateEditFields = (req) => {
-  const { firstName, lastName, gender, skills, age, about, ...extrafields } =
-    req.body;
+  const {
+    firstName,
+    lastName,
+    gender,
+    skills,
+    age,
+    about,
+    photoURL,
+    dob,
+    ...extrafields
+  } = req.body;
 
   if (Object.keys(extrafields).length > 0) {
     throw new Error("can't update extra fields");
@@ -54,12 +87,17 @@ const validateEditFields = (req) => {
       throw new Error("only genders should be male, female, and others");
     }
   }
+
+  if (!validator.isURL(photoURL)) {
+    throw new Error("invalid photoURL");
+  }
+
   if (age !== undefined) {
     const ageNum = Number(age);
     if (Number.isNaN(ageNum)) {
       throw new Error("Age should be a number");
     } else if (age < 0) {
-      throw new Error("Age can't be negatice");
+      throw new Error("Age can't be negative");
     } else if (age > 100) {
       throw new Error("Age can't be greater than 100");
     }
