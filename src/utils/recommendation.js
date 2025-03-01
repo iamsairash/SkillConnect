@@ -2,8 +2,12 @@ const User = require("../models/user.js");
 const ConnectionRequest = require("../models/connectionRequest.js");
 
 const calculateSkillSimilarity = (skillsA, skillsB) => {
-  const setA = new Set(skillsA || []);
-  const setB = new Set(skillsB || []);
+  // Normalize skills to lowercase to handle case differences
+  const normalizedSkillsA = (skillsA || []).map((skill) => skill.toLowerCase());
+  const normalizedSkillsB = (skillsB || []).map((skill) => skill.toLowerCase());
+
+  const setA = new Set(normalizedSkillsA);
+  const setB = new Set(normalizedSkillsB);
   const intersection = new Set([...setA].filter((x) => setB.has(x)));
   const union = new Set([...setA, ...setB]);
   return intersection.size / union.size || 0;
