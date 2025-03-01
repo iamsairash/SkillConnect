@@ -20,7 +20,7 @@ authRouter.post("/login", async (req, res) => {
       const token = await user.getJWT();
       res.cookie("token", token, { maxAge: 680_400_000 });
 
-      res.json({ data: user });
+      res.json({ user });
     } else {
       throw new Error("invalid credentials");
     }

@@ -79,6 +79,21 @@ const validateEditFields = (req) => {
       throw new Error("The letters in mame must be between 3 and 15");
     }
   }
+  // if (dob !== undefined) {
+  //   if (dob && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+  //     throw new Error("Invalid date of birth format. Use YYYY-MM-DD.");
+  //   }
+  // }
+  if (dob !== undefined) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+      throw new Error("Invalid date of birth format. Use YYYY-MM-DD.");
+    }
+    const parsedDob = new Date(dob);
+    if (isNaN(parsedDob.getTime())) {
+      throw new Error("Invalid date. Please enter a real date.");
+    }
+  }
+
   if (gender !== undefined) {
     if (
       typeof gender !== "string" ||
@@ -88,7 +103,7 @@ const validateEditFields = (req) => {
     }
   }
 
-  if (!validator.isURL(photoURL)) {
+  if (photoURL !== undefined && !validator.isURL(photoURL)) {
     throw new Error("invalid photoURL");
   }
 

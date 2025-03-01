@@ -13,7 +13,7 @@ profileRouter.get("/profile/view", authUser, async (req, res) => {
   try {
     const user = req.user;
     const age = user.getAge();
-    res.send({ user, age });
+    res.json({ user, age });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
@@ -22,7 +22,7 @@ profileRouter.get("/profile/view", authUser, async (req, res) => {
 profileRouter.patch("/profile/edit", authUser, async (req, res) => {
   try {
     validateEditFields(req);
-    const loggedInUser = req.user;
+    const user = req.user;
     const allowedUpdate = [
       "firstName",
       "lastName",
@@ -31,7 +31,12 @@ profileRouter.patch("/profile/edit", authUser, async (req, res) => {
       "photoURL",
       "skills",
       "gender",
+      "dob",
     ];
+    const parsedDob = new Date(user.dob);
+    if (isNaN(parsedDob.getTime())) {
+      return res.status(400).send("Invalid date format. Use YYYY-MM-DD.");
+    }
     const receivedFields = Object.keys(req.body);
     const invalidFields = receivedFields.filter(
       (field) => !allowedUpdate.includes(field)
@@ -43,9 +48,9 @@ profileRouter.patch("/profile/edit", authUser, async (req, res) => {
         .send(`can't update Fields ${invalidFields.join(" ")}`);
     }
 
-    receivedFields.forEach((k) => (loggedInUser[k] = req.body[k]));
-    await loggedInUser.save();
-    res.send(`${loggedInUser.firstName} your profile updated successfully`);
+    receivedFields.forEach((k) => (user[k] = req.body[k]));
+    await user.save();
+    res.json({ user });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }

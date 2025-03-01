@@ -1,11 +1,12 @@
 const express = require("express");
 const { authUser } = require("../middlewares/auth");
+const { getRecommendations } = require("../utils/recommendation.js");
 const ConnectionRequest = require("../models/connectionRequest");
 const { set } = require("mongoose");
 const User = require("../models/user");
 
 const userRouter = express.Router();
-const USER_SAFE_DATA = "firstName lastName photoURL age gender skills about";
+const USER_SAFE_DATA = "firstName lastName photoURL dob gender skills about";
 
 userRouter.get("/user/request/received", authUser, async (req, res) => {
   try {
@@ -14,7 +15,10 @@ userRouter.get("/user/request/received", authUser, async (req, res) => {
     const connectionRequest = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", "firstName lastName age gender skills about");
+    }).populate(
+      "fromUserId",
+      "firstName lastName dob gender skills about photoURL"
+    );
 
     if (connectionRequest.length < 1) {
       return res.send("no connection requests");
@@ -83,6 +87,15 @@ userRouter.get("/user/feed/", authUser, async (req, res) => {
       .limit(limit);
 
     res.send(users);
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
+
+userRouter.get("/recommendations", authUser, async (req, res) => {
+  try {
+    const recommendations = await getRecommendations(req.user);
+    res.json({ message: "Recommended users", recommendations });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
