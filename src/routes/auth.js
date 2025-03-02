@@ -11,7 +11,7 @@ authRouter.post("/login", async (req, res) => {
     const user = await User.findOne({ emailId });
 
     if (!user) {
-      throw new Error("invalid credentials"); // not registered user vandaa aru lai tha hunx ki yo email hamro db ma xaina (yo pani euta info ho jun leak hunu hudaina)
+      throw new Error("invalid credentials");
     }
 
     const isValidPassword = await user.validatePassword(password);
@@ -35,7 +35,7 @@ authRouter.post("/signup", async (req, res) => {
 
     validateSignupData(req);
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = new User({
+    const userdata = new User({
       firstName,
       lastName,
       emailId,
@@ -43,7 +43,9 @@ authRouter.post("/signup", async (req, res) => {
       gender,
       dob,
     }); // creating instance of User model
-    await user.save();
+    const user = await userdata.save();
+    const token = await user.getJWT();
+    res.cookie("token", token, { maxAge: 680_400_000 });
     res.send("data saved successfully!!!");
   } catch (err) {
     res.status(400).send("Something went wrong " + err.message);
