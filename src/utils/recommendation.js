@@ -34,27 +34,21 @@ const getMutualConnectionsCount = async (userIdA, userIdB) => {
     return request.fromUserId.toString();
   });
 
-  // Count mutuals
   return aConnections.filter((id) => bConnections.includes(id)).length;
 };
 
 const getRecommendations = async (user, limit = 5) => {
-  // Fetch all relevant connection requests
   const connectionRequests = await ConnectionRequest.find({
     $or: [{ fromUserId: user._id }, { toUserId: user._id }],
-    status: { $in: ["accepted", "ignored", "rejected"] },
   });
 
-  // Extract IDs of users to exclude
   const excludeIds = connectionRequests.map((request) => {
     if (request.fromUserId.equals(user._id)) return request.toUserId.toString();
     return request.fromUserId.toString();
   });
 
-  // Remove duplicates
   const uniqueExcludeIds = [...new Set(excludeIds)];
 
-  // Fetch all users except yourself and excluded ones
   const allUsers = await User.find({
     _id: { $ne: user._id, $nin: uniqueExcludeIds },
   });
