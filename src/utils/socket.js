@@ -28,8 +28,6 @@ const initializeSocket = (server) => {
 
           const roomId = [loggedInUser, userId].sort().join("_");
           io.to(roomId).emit("receivedMessage", { firstName, text });
-
-          console.log("Message sent and saved:", text);
         } catch (error) {
           console.error("Error saving message:", error);
         }
