@@ -8,7 +8,9 @@ const profileRouter = require("./routes/profile.js");
 const requestRouter = require("./routes/request.js");
 const userRouter = require("./routes/user.js");
 const messageRouter = require("./routes/messages.js");
+const { createServer } = require("node:http");
 const cors = require("cors");
+const initializeSocket = require("./utils/socket.js");
 
 const app = express();
 
@@ -24,6 +26,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+const server = createServer(app);
+initializeSocket(server);
+
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
@@ -33,7 +38,7 @@ app.use("/", messageRouter);
 connectDB()
   .then(() => {
     console.log("successfully connected to database");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log("listening at port " + PORT);
     });
   })
