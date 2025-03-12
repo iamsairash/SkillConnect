@@ -59,43 +59,21 @@ userRouter.get("/user/connections", authUser, async (req, res) => {
 
 userRouter.get("/user/feed/", authUser, async (req, res) => {
   try {
-    const page = req.query.page || 1;
-    let limit = req.query.limit || 10;
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
-    const loggedInsUser = req.user;
-    const connectionRequests = await ConnectionRequest.find({
-      $or: [{ fromUserId: loggedInsUser._id }, { toUserId: loggedInsUser._id }],
-    }).select("fromUserId toUserId");
+    const loggedInUser = req.user;
 
-    const hiddenUserFromFeed = new Set();
-    connectionRequests.forEach((req) => {
-      hiddenUserFromFeed.add(req.fromUserId.toString());
-      hiddenUserFromFeed.add(req.toUserId.toString());
-    });
+    const recommendations = await getRecommendations(loggedInUser, limit, skip);
 
-    const users = await User.find({
-      $and: [
-        {
-          _id: { $nin: Array.from(hiddenUserFromFeed) },
-        },
-        { _id: { $ne: loggedInsUser._id } },
-      ],
-    })
-      .select(USER_SAFE_DATA)
-      .skip(skip)
-      .limit(limit);
+    const users = recommendations.map((rec) => ({
+      ...rec.user,
+      mutualConnections: rec.mutualConnections,
+      recommendationScore: rec.score,
+    }));
 
     res.send(users);
-  } catch (err) {
-    res.status(400).send("Error: " + err.message);
-  }
-});
-
-userRouter.get("/recommendations", authUser, async (req, res) => {
-  try {
-    const recommendations = await getRecommendations(req.user);
-    res.json({ message: "Recommended users", recommendations });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
