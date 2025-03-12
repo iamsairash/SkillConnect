@@ -61,12 +61,14 @@ userRouter.get("/user/feed/", authUser, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
-    limit = limit > 50 ? 50 : limit;
+    limit = limit > 50 ? 50 : limit; // Cap limit at 50
     const skip = (page - 1) * limit;
     const loggedInUser = req.user;
 
+    // Fetch recommendations for the current page
     const recommendations = await getRecommendations(loggedInUser, limit, skip);
 
+    // Format response
     const users = recommendations.map((rec) => ({
       ...rec.user,
       mutualConnections: rec.mutualConnections,

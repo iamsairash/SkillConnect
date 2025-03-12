@@ -1,11 +1,10 @@
 const User = require("../models/user.js");
 const ConnectionRequest = require("../models/connectionRequest.js");
 
+// Calculate similarity between two sets of skills using Jaccard Index
 const calculateSkillSimilarity = (skillsA, skillsB) => {
-  // Normalize skills to lowercase to handle case differences
   const normalizedSkillsA = (skillsA || []).map((skill) => skill.toLowerCase());
   const normalizedSkillsB = (skillsB || []).map((skill) => skill.toLowerCase());
-
   const setA = new Set(normalizedSkillsA);
   const setB = new Set(normalizedSkillsB);
   const intersection = new Set([...setA].filter((x) => setB.has(x)));
@@ -13,42 +12,47 @@ const calculateSkillSimilarity = (skillsA, skillsB) => {
   return intersection.size / union.size || 0;
 };
 
+// Count mutual connections between two users
 const getMutualConnectionsCount = async (userIdA, userIdB) => {
-  // User A's connections
   const aRequests = await ConnectionRequest.find({
     $or: [{ fromUserId: userIdA }, { toUserId: userIdA }],
     status: "accepted",
   });
-  const aConnections = aRequests.map((request) => {
-    if (request.fromUserId.equals(userIdA)) return request.toUserId.toString();
-    return request.fromUserId.toString();
-  });
+  const aConnections = aRequests.map((request) =>
+    request.fromUserId.equals(userIdA)
+      ? request.toUserId.toString()
+      : request.fromUserId.toString()
+  );
 
-  // User B's connections
   const bRequests = await ConnectionRequest.find({
     $or: [{ fromUserId: userIdB }, { toUserId: userIdB }],
     status: "accepted",
   });
-  const bConnections = bRequests.map((request) => {
-    if (request.fromUserId.equals(userIdB)) return request.toUserId.toString();
-    return request.fromUserId.toString();
-  });
+  const bConnections = bRequests.map((request) =>
+    request.fromUserId.equals(userIdB)
+      ? request.toUserId.toString()
+      : request.fromUserId.toString()
+  );
 
   return aConnections.filter((id) => bConnections.includes(id)).length;
 };
 
-const getRecommendations = async (user, limit = 5) => {
+// Generate recommendations with proper pagination
+const getRecommendations = async (user, limit = 10, skip = 0) => {
+  // Fetch all connection requests involving the user
   const connectionRequests = await ConnectionRequest.find({
     $or: [{ fromUserId: user._id }, { toUserId: user._id }],
   });
 
-  const excludeIds = connectionRequests.map((request) => {
-    if (request.fromUserId.equals(user._id)) return request.toUserId.toString();
-    return request.fromUserId.toString();
-  });
-
+  // IDs to exclude (users already connected or requested)
+  const excludeIds = connectionRequests.map((request) =>
+    request.fromUserId.equals(user._id)
+      ? request.toUserId.toString()
+      : request.fromUserId.toString()
+  );
   const uniqueExcludeIds = [...new Set(excludeIds)];
 
+  // Fetch all users except the logged-in user and excluded IDs
   const allUsers = await User.find({
     _id: { $ne: user._id, $nin: uniqueExcludeIds },
   });
@@ -79,7 +83,11 @@ const getRecommendations = async (user, limit = 5) => {
       mutualConnections: mutualCount,
     });
   }
-  return recommendations.sort((a, b) => b.score - a.score).slice(0, limit);
+
+  // Sort by score and apply pagination
+  return recommendations
+    .sort((a, b) => b.score - a.score)
+    .slice(skip, skip + limit);
 };
 
 module.exports = { getRecommendations };
