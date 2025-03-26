@@ -1,1 +1,1 @@
-# This is devTinder. 🚀
+# This is SkillConnect. 🚀
